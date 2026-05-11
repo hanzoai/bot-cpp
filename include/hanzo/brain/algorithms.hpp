@@ -876,19 +876,19 @@ struct Sha256 {
     static std::uint32_t rotr(std::uint32_t x, unsigned n) { return (x >> n) | (x << (32 - n)); }
     void compress(const std::uint8_t* block) {
         std::array<std::uint32_t, 64> w{};
-        for (int i = 0; i < 16; ++i) {
+        for (std::size_t i = 0; i < 16; ++i) {
             w[i] = (std::uint32_t(block[i * 4]) << 24)
                  | (std::uint32_t(block[i * 4 + 1]) << 16)
                  | (std::uint32_t(block[i * 4 + 2]) << 8)
                  | (std::uint32_t(block[i * 4 + 3]));
         }
-        for (int i = 16; i < 64; ++i) {
+        for (std::size_t i = 16; i < 64; ++i) {
             std::uint32_t s0 = rotr(w[i - 15], 7) ^ rotr(w[i - 15], 18) ^ (w[i - 15] >> 3);
             std::uint32_t s1 = rotr(w[i - 2], 17) ^ rotr(w[i - 2], 19) ^ (w[i - 2] >> 10);
             w[i] = w[i - 16] + s0 + w[i - 7] + s1;
         }
         auto s = state;
-        for (int i = 0; i < 64; ++i) {
+        for (std::size_t i = 0; i < 64; ++i) {
             std::uint32_t S1 = rotr(s[4], 6) ^ rotr(s[4], 11) ^ rotr(s[4], 25);
             std::uint32_t ch = (s[4] & s[5]) ^ (~s[4] & s[6]);
             std::uint32_t t1 = s[7] + S1 + ch + K[i] + w[i];
@@ -898,7 +898,7 @@ struct Sha256 {
             s[7] = s[6]; s[6] = s[5]; s[5] = s[4]; s[4] = s[3] + t1;
             s[3] = s[2]; s[2] = s[1]; s[1] = s[0]; s[0] = t1 + t2;
         }
-        for (int i = 0; i < 8; ++i) state[i] += s[i];
+        for (std::size_t i = 0; i < 8; ++i) state[i] += s[i];
     }
     void update(const std::uint8_t* data, std::size_t len) {
         bits += len * 8;
@@ -911,23 +911,23 @@ struct Sha256 {
     }
     std::array<std::uint8_t, 32> finalize() {
         std::array<std::uint8_t, 32> out{};
-        std::uint64_t total_bits = bits;
-        std::uint8_t pad[64 + 8]; std::size_t pad_len;
+        const std::uint64_t total_bits = bits;
         buf[buf_len++] = 0x80;
         if (buf_len > 56) {
             while (buf_len < 64) buf[buf_len++] = 0;
             compress(buf.data()); buf_len = 0;
         }
         while (buf_len < 56) buf[buf_len++] = 0;
-        for (int i = 7; i >= 0; --i) buf[buf_len++] = static_cast<std::uint8_t>((total_bits >> (i * 8)) & 0xff);
-        compress(buf.data());
-        for (int i = 0; i < 8; ++i) {
-            out[i * 4]     = (state[i] >> 24) & 0xff;
-            out[i * 4 + 1] = (state[i] >> 16) & 0xff;
-            out[i * 4 + 2] = (state[i] >> 8) & 0xff;
-            out[i * 4 + 3] = state[i] & 0xff;
+        for (int i = 7; i >= 0; --i) {
+            buf[buf_len++] = static_cast<std::uint8_t>((total_bits >> (i * 8)) & 0xff);
         }
-        (void)pad; (void)pad_len;
+        compress(buf.data());
+        for (std::size_t i = 0; i < 8; ++i) {
+            out[i * 4]     = static_cast<std::uint8_t>((state[i] >> 24) & 0xff);
+            out[i * 4 + 1] = static_cast<std::uint8_t>((state[i] >> 16) & 0xff);
+            out[i * 4 + 2] = static_cast<std::uint8_t>((state[i] >> 8) & 0xff);
+            out[i * 4 + 3] = static_cast<std::uint8_t>(state[i] & 0xff);
+        }
         return out;
     }
 };
