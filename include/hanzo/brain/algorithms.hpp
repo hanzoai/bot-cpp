@@ -844,10 +844,10 @@ inline std::string content_range(std::int64_t start, std::int64_t end, std::int6
 // ── Wallet address (base58check) ────────────────────────────────────
 //
 // BLAKE3 — wallet addresses are content-addressable; every brain runtime
-// (TS @noble/hashes/blake3, Python blake3, Go lukechampine.com/blake3,
-// Rust blake3 crate) hashes with BLAKE3 so the output is byte-equivalent
-// across all five. The reference C implementation is vendored at
-// `third_party/blake3/`; CMakeLists.txt links it into test_algorithms.
+// hashes with BLAKE3 so the output is byte-equivalent across all five
+// (TS @noble/hashes/blake3, Python blake3 pip, Go luxfi/crypto/blake3,
+// Rust blake3 crate, C++ this header). The C source is pulled at CMake
+// configure time from `luxcpp/blake3-reference` — no vendored copy.
 
 extern "C" {
 #include "blake3.h"

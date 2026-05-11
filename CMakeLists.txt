@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.20)
 project(hanzo-bot-cpp LANGUAGES C CXX VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -11,22 +11,36 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-# Vendored BLAKE3 reference implementation. Wallet addresses are
-# content-addressable; every brain runtime hashes with BLAKE3 so this
-# C++ port produces byte-equivalent output with TS / Python / Go / Rust.
-set(BLAKE3_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/blake3)
-set(BLAKE3_SRC
-    ${BLAKE3_DIR}/blake3.c
-    ${BLAKE3_DIR}/blake3_dispatch.c
-    ${BLAKE3_DIR}/blake3_portable.c
+# BLAKE3 from the canonical Lux C++ crypto stack. Pull straight from
+# luxcpp/blake3-reference — same source luxcpp/crypto uses, no vendored
+# copy. One way to do it.
+include(FetchContent)
+FetchContent_Declare(
+    luxcpp_blake3
+    GIT_REPOSITORY https://github.com/luxcpp/blake3-reference.git
+    GIT_TAG        master
+    GIT_SHALLOW    TRUE
 )
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm|aarch64")
-    list(APPEND BLAKE3_SRC ${BLAKE3_DIR}/blake3_neon.c)
+FetchContent_MakeAvailable(luxcpp_blake3)
+
+# blake3-reference provides a `blake3` CMake target via its own
+# CMakeLists.txt (under /c/). If for some reason the upstream target name
+# changes, this is the single point of failure.
+if(NOT TARGET blake3)
+    # Fallback: build the portable + NEON sources directly.
+    set(BLAKE3_DIR ${luxcpp_blake3_SOURCE_DIR}/c)
+    set(BLAKE3_SRC
+        ${BLAKE3_DIR}/blake3.c
+        ${BLAKE3_DIR}/blake3_dispatch.c
+        ${BLAKE3_DIR}/blake3_portable.c
+    )
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm|aarch64")
+        list(APPEND BLAKE3_SRC ${BLAKE3_DIR}/blake3_neon.c)
+    endif()
+    add_library(blake3 STATIC ${BLAKE3_SRC})
+    target_include_directories(blake3 PUBLIC ${BLAKE3_DIR})
+    target_compile_options(blake3 PRIVATE -Wno-unused-parameter -Wno-pedantic)
 endif()
-add_library(blake3 STATIC ${BLAKE3_SRC})
-target_include_directories(blake3 PUBLIC ${BLAKE3_DIR})
-# Reference impl uses some macro patterns clang flags as pedantic.
-target_compile_options(blake3 PRIVATE -Wno-unused-parameter -Wno-pedantic)
 
 # Header-only brain algorithm library.
 add_library(hanzo_brain INTERFACE)
@@ -43,5 +57,3 @@ target_link_libraries(test_algorithms PRIVATE hanzo_brain)
 add_test(NAME algorithms COMMAND test_algorithms)
 
 install(DIRECTORY include/hanzo DESTINATION include)
-install(DIRECTORY third_party/blake3 DESTINATION include/hanzo_brain_deps
-    FILES_MATCHING PATTERN "*.h")

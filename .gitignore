@@ -1,4 +1,5 @@
 build/
+_deps/
 *.o
 *.a
 *.so

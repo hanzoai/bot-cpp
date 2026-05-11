@@ -45,7 +45,9 @@ ctest --test-dir build --output-on-failure
 ## What ships
 
 `include/hanzo/brain/algorithms.hpp` — header-only C++17 port of the pure-CPU
-brain primitives. No external dependencies; uses the C++ standard library only.
+brain primitives. One external dep: BLAKE3 (pulled at configure time from
+[`luxcpp/blake3-reference`](https://github.com/luxcpp/blake3-reference) — the
+canonical Lux C++ crypto source). No vendored copies.
 
 - **Retrieval**: `rrf_fuse`, `rsf_fuse`, `select_rrf_k`, `select_weights`,
   `mmr_rerank`, `cosine`, `dedup_hits`
@@ -61,7 +63,7 @@ brain primitives. No external dependencies; uses the C++ standard library only.
 - **Spatial**: `haversine_km`, `bbox_around`, `in_box`
 - **HTTP Range**: `parse_range`, `content_range`
 - **Crypto**: `encode_address`, `decode_address` (wallet-style content-addressable
-  ids — SHA-256 stand-in for BLAKE3, matching the Go / Rust runtimes' shape)
+  ids — real BLAKE3 via `luxcpp/blake3-reference`, byte-equivalent with TS / Python / Go / Rust)
 - **Graph**: `normalize_edges`, `snn_score`, `pfnet_infinity`, `louvain`
 - **Inference**: `parse_slug`, `format_slug`, `RuntimeConfig` (db_override → env
   → default), `classify_link_rule`
