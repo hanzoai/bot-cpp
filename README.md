@@ -5,7 +5,7 @@
 Same algorithm surface as the TypeScript canonical
 ([`hanzoai/brain`](https://github.com/hanzoai/brain), `@hanzo/bot-memory`),
 Python ([`hanzoai/python-sdk`](https://github.com/hanzoai/python-sdk),
-`hanzo-memory`), Go ([`hanzoai/bot-go`](https://github.com/hanzoai/bot-go)),
+`hanzo-memory`), Go ([`hanzobot/go`](https://github.com/hanzobot/go)),
 and Rust ([`hanzoai/mcp`](https://github.com/hanzoai/mcp),
 `hanzo_mcp::brain::algorithms`).
 
